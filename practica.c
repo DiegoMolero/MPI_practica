@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
         //Comunicar
         MPI_Scatter(array, size_local, MPI_INT, array_local, size_local, MPI_INT, 0, MPI_COMM_WORLD);
         //Procesar
-        printf("\nEl proceso %d tiene una array de size: %d", rank,size_local);
+        printf("El proceso %d tiene una array de size: %d\n", rank,size_local);
         int i=0;
         for(i;i<size_local;i++){
                 if(array_local[i] <= 14){
@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
                 }        
         }
         //Agrupar y Asignar
-        MPI_Gather(array_local, size_local, MPI_INT, array, totalsize, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Gather(array_local, size_local, MPI_INT, array, size_local, MPI_INT, 0, MPI_COMM_WORLD);
 
         //Imprimir resultados
         if(rank == root){
