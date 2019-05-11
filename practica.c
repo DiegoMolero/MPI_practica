@@ -11,12 +11,12 @@ void createRandomVector(int *array, int size){
         int N = 65;
         int M = 0;
         int j = 0;
-        printf("Array inicial: ");
+        //printf("Array inicial: ");
         for (j; j < size; j++ ) {
                 // numero generando entre M y N
                 numero = rand () % (N-M+1) + M;
                 array[j] = numero;
-                printf("%d,",array[j]);
+                //printf("%d,",array[j]);
         }
         printf("\n");
 }
@@ -26,8 +26,9 @@ int main(int argc, char** argv) {
         int n_processes, rank;
         int buf;
         const int root=0;
+        double start, finish;
         //Array
-        const int totalsize=400;
+        const int totalsize=1000000;
         int array[totalsize];
 
         //MPI
@@ -37,14 +38,21 @@ int main(int argc, char** argv) {
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);
         
         if(rank == root) {
-           createRandomVector(array,totalsize);
+                createRandomVector(array,totalsize);
+                //Iniciar contador de tiempo
+                start = MPI_Wtime();
         }
         //----------------------Diseño de FOSTER--------------------
-        //Particionar 
+        //----------------------------------------------------------
+        //-------------------------PARTICIONAR---------------------- 
         int size_local = totalsize/n_processes;
+        if(rank ==  n_processes-1){
+                int resto = totalsize % size_local;
+                size_local = size_local + resto;
+        }
         int array_local[size_local];
-        //Comunicar
-        MPI_Scatter(array, size_local, MPI_INT, array_local, size_local, MPI_INT, 0, MPI_COMM_WORLD);
+        //----------------------COMUNICACION-----------------------
+        MPI_Scatter(array, size_local, MPI_INT, array_local, size_local, MPI_INT, 0, MPI_COMM_WORLD); 
         //Procesar
         printf("El proceso %d tiene una array de size: %d\n", rank,size_local);
         int i=0;
@@ -59,18 +67,23 @@ int main(int argc, char** argv) {
                 array_local[i]=3;
                 }        
         }
-        //Agrupar y Asignar
+        //--------------------AGRUPAR Y ASIGNA-------------------
         MPI_Gather(array_local, size_local, MPI_INT, array, size_local, MPI_INT, 0, MPI_COMM_WORLD);
 
-        //Imprimir resultados
+        //Mostrar resultados
         if(rank == root){
+                /*
                 i = 0;
                 printf("\nResultado final:");
                 for ( i; i < totalsize; i++)
                 {
                         printf("%d,",array[i]);
                 }
-        }        
+                */
+                //Finalizar contador de tiempo
+                finish = MPI_Wtime();
+                printf("\nTiempo máximo de ejecución= %f segundos.\n", finish - start);  
+        }     
         MPI_Finalize();
 
         return 0;
