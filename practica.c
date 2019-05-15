@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <time.h>
+#include <limits.h>
 
 void createRandomVector(int *array, int size){
         srand(time(NULL) + getpid());
@@ -29,7 +30,7 @@ int main(int argc, char** argv) {
         double start, finish;
         //Array
         const int totalsize=1000000;
-        int array[totalsize];
+        int *array = (int *) malloc(totalsize* sizeof(int));
 
         //MPI
         MPI_Init(&argc, &argv);
@@ -46,10 +47,6 @@ int main(int argc, char** argv) {
         //----------------------------------------------------------
         //-------------------------PARTICIONAR---------------------- 
         int size_local = totalsize/n_processes;
-        if(rank ==  n_processes-1){
-                int resto = totalsize % size_local;
-                size_local = size_local + resto;
-        }
         int array_local[size_local];
         //----------------------COMUNICACION-----------------------
         MPI_Scatter(array, size_local, MPI_INT, array_local, size_local, MPI_INT, 0, MPI_COMM_WORLD); 
@@ -69,17 +66,32 @@ int main(int argc, char** argv) {
         }
         //--------------------AGRUPAR Y ASIGNA-------------------
         MPI_Gather(array_local, size_local, MPI_INT, array, size_local, MPI_INT, 0, MPI_COMM_WORLD);
-
+		
         //Mostrar resultados
         if(rank == root){
-                /*
+				int resto = totalsize % size_local;
+				if(resto != 0){
+					int j=totalsize-1;
+					for(j;j>totalsize-resto-1;j--){
+				                if(array[j] <= 14){
+                        			array[j] = 1;
+								}else if (array[j] <= 24)
+								{
+								    array[j] = 2;
+								}else
+								{
+									array[j]=3;
+								}  
+					}
+				}
+                
                 i = 0;
                 printf("\nResultado final:");
                 for ( i; i < totalsize; i++)
                 {
                         printf("%d,",array[i]);
                 }
-                */
+          
                 //Finalizar contador de tiempo
                 finish = MPI_Wtime();
                 printf("\nTiempo máximo de ejecución= %f segundos.\n", finish - start);  
